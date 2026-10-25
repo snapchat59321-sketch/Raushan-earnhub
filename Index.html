@@ -1,0 +1,110 @@
+from pathlib import Path
+
+html = r'''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Affiliate Earnings Dashboard</title>
+<style>
+:root{--bg:#0b1020;--panel:#141c31;--panel2:#19243c;--text:#f3f6ff;--muted:#aab6d0;--accent:#7c9cff;--green:#56d6a1;--border:#2b3856}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101a34,#080c18 65%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:22px 16px 40px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}.brand{display:flex;gap:11px;align-items:center}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#7c9cff,#8b5cf6);display:grid;place-items:center;font-weight:900;font-size:19px}.brand h1{font-size:20px;margin:0}.sub{color:var(--muted);font-size:13px}.tag{border:1px solid var(--border);border-radius:999px;padding:7px 11px;color:#d7e1ff;font-size:12px}
+h2{font-size:17px;margin:24px 0 12px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card,.panel{background:rgba(20,28,49,.94);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 10px 25px #0002}.label{color:var(--muted);font-size:13px}.amount{font-size:clamp(21px,3vw,29px);font-weight:750;margin:7px 0 3px;letter-spacing:-.5px}.change{font-size:12px;color:var(--green)}.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}.panel-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.panel-head h2{margin:0}.small{font-size:12px;color:var(--muted)}canvas{width:100%;height:220px;display:block;margin-top:12px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}input,select,button{font:inherit}input,select{width:100%;background:#0c1325;border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);outline:none}input:focus,select:focus{border-color:var(--accent)}button{border:0;border-radius:11px;background:var(--accent);color:#081126;font-weight:750;padding:11px 14px;cursor:pointer}button.secondary{background:#263452;color:var(--text);border:1px solid var(--border)}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:510px}th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--border);font-size:13px}th{color:var(--muted);font-weight:600}td:last-child,th:last-child{text-align:right}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#203b39;color:#83e8c2;font-size:11px}.empty{text-align:center;color:var(--muted);padding:22px}.note{margin-top:18px;padding:12px 14px;border:1px solid #574b2b;background:#241f14;color:#e7d8a8;border-radius:12px;font-size:12px}.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:1fr}.wrap{padding:16px 12px 30px}.card{padding:14px}.amount{font-size:23px}}
+@media(max-width:380px){.grid{gap:8px}.card{padding:11px}.brand h1{font-size:17px}.formgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><div class="logo">AD</div><div><h1>Affiliate Dashboard</h1><div class="sub">Your online business overview</div></div></div>
+  <div class="tag">DEMO · Manual tracking</div>
+</header>
+
+<section class="grid" aria-label="Earning summary">
+  <div class="card"><div class="label">Today's Earning</div><div class="amount" id="today">₹0</div><div class="change">Recorded today</div></div>
+  <div class="card"><div class="label">Last 7 Days</div><div class="amount" id="week">₹0</div><div class="change">Rolling 7-day total</div></div>
+  <div class="card"><div class="label">Last 30 Days</div><div class="amount" id="month">₹0</div><div class="change">Rolling 30-day total</div></div>
+  <div class="card"><div class="label">Total Earning</div><div class="amount" id="total">₹0</div><div class="change">All recorded entries</div></div>
+</section>
+
+<div class="layout">
+  <section class="panel" style="margin-top:14px">
+    <div class="panel-head"><h2>Earning trend</h2><span class="small">Last 7 days</span></div>
+    <canvas id="chart" width="700" height="260" aria-label="Earnings chart"></canvas>
+    <div class="small">The chart updates when you add or delete entries.</div>
+  </section>
+  <section class="panel" style="margin-top:14px">
+    <div class="panel-head"><h2>Add earning</h2><span class="small">Manual entry</span></div>
+    <form id="entryForm">
+      <div class="formgrid">
+        <div><label for="date">Date</label><input id="date" type="date" required></div>
+        <div><label for="amount">Amount (₹)</label><input id="amount" type="number" min="0.01" step="0.01" placeholder="e.g. 250" required></div>
+        <div><label for="source">Platform</label><select id="source"><option>Amazon Associates</option><option>Flipkart Affiliate</option><option>Meesho</option><option>Own business</option><option>Other</option></select></div>
+        <div><label for="status">Status</label><select id="status"><option>Pending</option><option>Approved</option><option>Paid</option></select></div>
+      </div>
+      <div style="margin-top:10px"><label for="noteInput">Note (optional)</label><input id="noteInput" maxlength="80" placeholder="Order, campaign, or short note"></div>
+      <div class="actions"><button type="submit">+ Add earning</button><button type="button" class="secondary" id="exportBtn">Export CSV</button></div>
+    </form>
+  </section>
+</div>
+
+<section class="panel" style="margin-top:14px">
+  <div class="panel-head"><h2>Recent entries</h2><span class="small" id="entryCount">0 entries</span></div>
+  <div class="tablewrap"><table><thead><tr><th>Date</th><th>Platform</th><th>Status</th><th>Note</th><th>Amount</th><th></th></tr></thead><tbody id="entries"></tbody></table></div>
+  <div id="empty" class="empty">No entries yet. Add your first real earning above.</div>
+</section>
+<div class="note"><strong>Important:</strong> This is a front-end demo. Entries are saved only in this browser on this device. It does not connect to Amazon/Flipkart or verify real commissions, and it has no user login or cloud backup. Never enter account passwords, bank details, or private customer data here.</div>
+<div class="footer">Affiliate Dashboard · Personal tracking template</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STORE='affiliateDashboardEntriesV1';
+let entries=[];
+try{entries=JSON.parse(localStorage.getItem(STORE)||'[]');if(!Array.isArray(entries))entries=[];}catch(e){entries=[];}
+const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+$('date').value=todayISO();
+const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(n||0);
+const parseDate=s=>new Date(s+'T00:00:00');
+function sum(list){return list.reduce((a,e)=>a+Number(e.amount||0),0)}
+function persist(){try{localStorage.setItem(STORE,JSON.stringify(entries));}catch(e){alert('Browser storage is unavailable. Export your entries as CSV for backup.');}}
+function render(){
+ const now=parseDate(todayISO());const start7=new Date(now);start7.setDate(start7.getDate()-6);const start30=new Date(now);start30.setDate(start30.getDate()-29);
+ $('today').textContent=money(sum(entries.filter(e=>e.date===todayISO())));
+ $('week').textContent=money(sum(entries.filter(e=>parseDate(e.date)>=start7&&parseDate(e.date)<=now)));
+ $('month').textContent=money(sum(entries.filter(e=>parseDate(e.date)>=start30&&parseDate(e.date)<=now)));
+ $('total').textContent=money(sum(entries));
+ $('entryCount').textContent=entries.length+' entr'+(entries.length===1?'y':'ies');
+ const tbody=$('entries');tbody.innerHTML='';
+ [...entries].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).forEach(e=>{
+  const tr=document.createElement('tr');
+  [e.date,e.source,e.status,e.note||'—'].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});
+  const amt=document.createElement('td');amt.textContent=money(Number(e.amount));tr.appendChild(amt);
+  const action=document.createElement('td');const del=document.createElement('button');del.textContent='Delete';del.className='secondary';del.style.padding='6px 9px';del.style.fontSize='12px';del.onclick=()=>{if(confirm('Delete this entry?')){entries=entries.filter(x=>x.id!==e.id);persist();render()}};action.appendChild(del);tr.appendChild(action);tbody.appendChild(tr);
+ });
+ $('empty').style.display=entries.length?'none':'block';drawChart();
+}
+function drawChart(){
+ const c=$('chart'),ctx=c.getContext('2d'),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);
+ const labels=[],vals=[];const end=parseDate(todayISO());
+ for(let i=6;i>=0;i--){const d=new Date(end);d.setDate(end.getDate()-i);const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;labels.push(d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}));vals.push(sum(entries.filter(e=>e.date===key)));}
+ const max=Math.max(...vals,100),left=48,right=16,top=18,bottom=34,plotW=w-left-right,plotH=h-top-bottom;
+ ctx.font='12px system-ui';ctx.strokeStyle='#2b3856';ctx.fillStyle='#aab6d0';ctx.lineWidth=1;
+ for(let i=0;i<4;i++){const y=top+plotH*i/3;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText('₹'+Math.round(max*(1-i/3)),4,y+4);}
+ const pts=vals.map((v,i)=>({x:left+plotW*(i/6),y:top+plotH-(v/max)*plotH}));
+ ctx.strokeStyle='#7c9cff';ctx.lineWidth=3;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
+ pts.forEach((p,i)=>{ctx.fillStyle='#7c9cff';ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#aab6d0';ctx.textAlign='center';ctx.fillText(labels[i],p.x,h-10)});ctx.textAlign='left';
+}
+$('entryForm').addEventListener('submit',e=>{e.preventDefault();const amount=Number($('amount').value);if(!Number.isFinite(amount)||amount<=0){alert('Enter an amount greater than zero.');return}
+ entries.push({id:Date.now()+Math.random(),date:$('date').value,amount,source:$('source').value,status:$('status').value,note:$('noteInput').value.trim()});persist();$('amount').value='';$('noteInput').value='';render();
+});
+$('exportBtn').addEventListener('click',()=>{const rows=[['Date','Amount INR','Platform','Status','Note'],...entries.map(e=>[e.date,e.amount,e.source,e.status,e.note||''])];const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='affiliate-earnings.csv';a.click();URL.revokeObjectURL(url);});
+render();
+</script>
+</body>
+</html>'''
+
+path = Path("/mnt/data/affiliate_earning_dashboard.html")
+path.write_text(html, encoding="utf-8")
+print(f"Created: {path}")
